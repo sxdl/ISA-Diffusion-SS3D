@@ -570,6 +570,11 @@ def get_unlabeled_loss(end_points, ema_end_points, config, config_dict, diffusio
                                       end_points['flip_y_axis'][labeled_num:],
                                       end_points['rot_mat'][labeled_num:], end_points['scale'][labeled_num:])
     size_residual_label = trans_size(size_label, size_residual_label, end_points['scale'][labeled_num:], config)
+    if config_dict['dataset'] == 'sunrgbd':
+        heading_label, heading_residual_label = trans_angle(heading_label, heading_residual_label,
+                                                            end_points['flip_x_axis'][labeled_num:],
+                                                            end_points['flip_y_axis'][labeled_num:],
+                                                            end_points['rot_angle'][labeled_num:], config)
 
     if config_dict['view_stats']:
         # also transform gt labels for gt objectness cheating

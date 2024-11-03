@@ -107,7 +107,30 @@ def my_worker_init_fn(worker_id):
 
 
 # Init datasets and dataloaders
-if FLAGS.dataset == "scannet":
+if FLAGS.dataset == 'sunrgbd':
+    sys.path.append(os.path.join(ROOT_DIR, 'sunrgbd'))
+    from sunrgbd.sunrgbd_detection_dataset import SunrgbdDetectionVotesDataset
+    from sunrgbd.sunrgbd_ssl_dataset import SunrgbdSSLLabeledDataset, SunrgbdSSLUnlabeledDataset
+    from sunrgbd.model_util_sunrgbd import SunrgbdDatasetConfig
+    DATASET_CONFIG = SunrgbdDatasetConfig()
+    LABELED_DATASET = SunrgbdSSLLabeledDataset(labeled_sample_list=FLAGS.labeled_sample_list,
+                                               num_points=NUM_POINT,
+                                               augment=True,
+                                               use_color=FLAGS.use_color,
+                                               use_height=(not FLAGS.no_height),
+                                               use_v1 = (not FLAGS.use_sunrgbd_v2))
+    UNLABELED_DATASET = SunrgbdSSLUnlabeledDataset(labeled_sample_list=FLAGS.labeled_sample_list,
+                                                   num_points=NUM_POINT,
+                                                   use_color=FLAGS.use_color,
+                                                   use_height=(not FLAGS.no_height),
+                                                   use_v1=(not FLAGS.use_sunrgbd_v2),
+                                                   load_labels=FLAGS.view_stats,
+                                                   augment=True)
+    TEST_DATASET = SunrgbdDetectionVotesDataset('val',
+                                                num_points=NUM_POINT, augment=False,
+                                                use_color=FLAGS.use_color, use_height=(not FLAGS.no_height),
+                                                use_v1=(not FLAGS.use_sunrgbd_v2))
+elif FLAGS.dataset == 'scannet':
     sys.path.append(os.path.join(ROOT_DIR, "scannet"))
     from scannet.scannet_detection_dataset import ScannetDetectionDataset
     from scannet.scannet_ssl_dataset import ScannetSSLLabeledDataset, ScannetSSLUnlabeledDataset
@@ -165,7 +188,7 @@ TEST_DATALOADER = DataLoader(
 )
 
 if FLAGS.use_wandb:
-    wandb.init(project=("Diffusion-SS3D_train_" + str(FLAGS.data_ratio)), entity="dev", name=os.path.basename(LOG_DIR))
+    wandb.init(project=("Diffusion-SS3D_train_" + str(FLAGS.data_ratio)), name=os.path.basename(LOG_DIR))
     wandb.config = {"learning_rate": BASE_LEARNING_RATE, "epochs": MAX_EPOCH, "batch_size": BATCH_SIZE}
 
 # Used for Pseudo box generation and AP calculation

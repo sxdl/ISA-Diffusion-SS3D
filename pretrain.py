@@ -117,7 +117,21 @@ def my_worker_init_fn(worker_id):
     np.random.seed(np.random.get_state()[1][0] + worker_id)
 
 # Create Dataset and Dataloader
-if FLAGS.dataset == "scannet":
+if FLAGS.dataset == 'sunrgbd':
+    from sunrgbd.sunrgbd_detection_dataset import SunrgbdDetectionVotesDataset, MAX_NUM_OBJ
+    from sunrgbd.model_util_sunrgbd import SunrgbdDatasetConfig
+
+    DATASET_CONFIG = SunrgbdDatasetConfig()
+    TRAIN_DATASET = SunrgbdDetectionVotesDataset('train', num_points=NUM_POINT,
+                                                 augment=True,
+                                                 use_color=FLAGS.use_color, use_height=(not FLAGS.no_height),
+                                                 use_v1=(not FLAGS.use_sunrgbd_v2),
+                                                 labeled_sample_list=FLAGS.labeled_sample_list)
+    TEST_DATASET = SunrgbdDetectionVotesDataset('val', num_points=NUM_POINT,
+                                                augment=False,
+                                                use_color=FLAGS.use_color, use_height=(not FLAGS.no_height),
+                                                use_v1=(not FLAGS.use_sunrgbd_v2))#, labeled_sample_list='sun_vis.txt')# single=FLAGS.vis_single)
+elif FLAGS.dataset == 'scannet':
     from scannet.scannet_detection_dataset import ScannetDetectionDataset, MAX_NUM_OBJ
     from scannet.model_util_scannet import ScannetDatasetConfig
 
@@ -146,7 +160,7 @@ TRAIN_DATALOADER = DataLoader(TRAIN_DATASET, batch_size=BATCH_SIZE, shuffle=True
 TEST_DATALOADER  = DataLoader(TEST_DATASET,  batch_size=BATCH_SIZE, shuffle=False, num_workers=4, worker_init_fn=my_worker_init_fn)
 
 if FLAGS.use_wandb:
-    wandb.init(project=("Diffusion-SS3D_pretrain_" + str(FLAGS.data_ratio)), entity="dev", name=os.path.basename(LOG_DIR))
+    wandb.init(project=("Diffusion-SS3D_pretrain_" + str(FLAGS.data_ratio)), name=os.path.basename(LOG_DIR))
     wandb.config = {"learning_rate": BASE_LEARNING_RATE, "epochs": MAX_EPOCH, "batch_size": BATCH_SIZE}
 
 
