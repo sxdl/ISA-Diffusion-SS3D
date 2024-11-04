@@ -48,6 +48,7 @@ parser.add_argument("--lr_decay_steps", default="400, 600, 800", help="When to d
 parser.add_argument("--lr_decay_rates", default="0.1, 0.1, 0.1", help="Decay rates for lr decay [default: 0.1,0.1,0.1]")
 parser.add_argument("--no_height", action="store_true", help="Do NOT use height signal in input.")
 parser.add_argument("--use_color", action="store_true", help="Use RGB color in input.")
+parser.add_argument('--use_sunrgbd_v2', action='store_true', help='Use V2 box labels for SUN RGB-D dataset')
 parser.add_argument("--overwrite", action="store_true", help="Overwrite existing log and dump folders.")
 parser.add_argument("--dump_results", action="store_true", help="Dump results.")
 parser.add_argument("--iou_weight", type=float, default=1.0)

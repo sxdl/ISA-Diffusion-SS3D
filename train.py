@@ -40,6 +40,7 @@ parser.add_argument("--log_dir", default="./temp", help="Dump dir to save model 
 parser.add_argument("--num_point", type=int, default=40000, help="Point Number")
 parser.add_argument("--no_height", action="store_true", help="Do NOT use height signal in Votenet input.")
 parser.add_argument("--use_color", action="store_true", help="Use RGB color in Votenet input.")
+parser.add_argument('--use_sunrgbd_v2', action='store_true', help='Use V2 box labels for SUN RGB-D dataset')
 parser.add_argument("--num_target", type=int, default=128, help="Proposal number")
 parser.add_argument("--vote_factor", type=int, default=1, help="Vote factor")
 parser.add_argument("--ap_iou_thresh", type=float, default=0.25, help="AP IoU threshold")
