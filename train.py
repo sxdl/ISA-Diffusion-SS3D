@@ -31,6 +31,8 @@ from models.loss_helper_labeled import get_labeled_loss
 from models.loss_helper_unlabeled import get_unlabeled_loss
 from models.loss_helper import get_loss
 
+from models.augment_helper import AugmentHelper
+
 parser = argparse.ArgumentParser()
 parser.add_argument("--model", default="votenet", help="Model file name.")
 parser.add_argument("--dataset", default="scannet", help="Dataset name")
@@ -70,6 +72,9 @@ parser.add_argument("--label_snr_scale",type=float,default=4.0,help="snr_scale f
 parser.add_argument("--timesteps", type=int, default=1000, help="timesteps")
 parser.add_argument("--sampling_timesteps", type=int, default=2, help="Num of sampling timesteps for diffusion process.")
 parser.add_argument("--use_wandb", action="store_true")
+
+parser.add_argument('--mixup_ratio', type=float, default=0.5)
+
 FLAGS = parser.parse_args()
 
 print(FLAGS)
@@ -329,6 +334,8 @@ def update_ema_variables(model, ema_model, alpha, global_step):
     for ema_param, param in zip(ema_model.parameters(), model.parameters()):
         ema_param.data.mul_(alpha).add_(1 - alpha, param.data)
 
+AUGMENT_HELPER = AugmentHelper(DATASET_CONFIG, mixup_ratio=FLAGS.mixup_ratio)
+
 print("************************** GLOBAL CONFIG END **************************")
 # ------------------------------------------------------------------------- GLOBAL CONFIG END
 
@@ -359,13 +366,18 @@ def train_one_epoch(global_step):
         for key in batch_data_label:
             batch_data_label[key] = batch_data_label[key].to(device)
 
-        inputs = {"point_clouds": batch_data_label["point_clouds"]}
+        # inputs = {"point_clouds": batch_data_label["point_clouds"]}
         ema_inputs = {"point_clouds": batch_data_label["ema_point_clouds"]}
 
         optimizer.zero_grad()
         with torch.no_grad():
             ema_end_points = ema_detector.evaluate(ema_inputs, batch_data_label, jittering=True, ema=True)
 
+        mixup_methods = [AUGMENT_HELPER.mix_up_1, AUGMENT_HELPER.mix_up_2, AUGMENT_HELPER.mix_up_3]
+        mixup = mixup_methods[np.random.randint(3)]
+        batch_data_label = mixup(batch_data_label, ema_end_points, CONFIG_DICT)
+        inputs = {'point_clouds': batch_data_label['point_clouds']}
+        
         end_points_dict = detector(inputs, batch_data_label, ema_end_points=ema_end_points, jittering=True)
 
         total_loss = 0

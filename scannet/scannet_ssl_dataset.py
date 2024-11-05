@@ -16,6 +16,8 @@ sys.path.append(os.path.join(ROOT_DIR, 'utils'))
 import utils.pc_util as pc_util
 from scannet.model_util_scannet import ScannetDatasetConfig, rotate_aligned_boxes
 
+from models.augment_helper import AugmentHelper
+
 DC = ScannetDatasetConfig()
 MAX_NUM_OBJ = 64
 MEAN_COLOR_RGB = np.array([109.8, 97.2, 83.8])
@@ -40,6 +42,7 @@ class ScannetSSLLabeledDataset(Dataset):
         self.use_color = use_color
         self.use_height = use_height
         self.augment = augment
+        self.augment_helper = AugmentHelper(DC)
 
     def __len__(self):
         return len(self.scan_names)
@@ -76,6 +79,8 @@ class ScannetSSLLabeledDataset(Dataset):
             floor_height = np.percentile(raw_point_cloud[:, 2], 0.99)
             height = raw_point_cloud[:, 2] - floor_height
             raw_point_cloud = np.concatenate([raw_point_cloud, np.expand_dims(height, 1)], 1)
+
+        self.augment_helper.add_to_labeled_instance_db_scannet(idx, raw_point_cloud, semantic_labels, instance_bboxes)
 
         # ------------------------------- LABELS ------------------------------
         target_bboxes = np.zeros((MAX_NUM_OBJ, 6))

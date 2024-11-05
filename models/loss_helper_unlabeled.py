@@ -538,6 +538,12 @@ def get_pseudo_labels(end_points, ema_end_points, pred_center, pred_sem_cls, pre
     false_center_label[torch.logical_not(neg_objectness_mask).unsqueeze(-1).expand(-1, -1, 3).bool()] = -1000
 
     iou_label = torch.gather(iou_pred, dim=1, index=inds)
+    
+    pseudo_mask_128 = torch.zeros((batch_size, num_proposal), dtype=torch.long).cuda()
+    for i in range(final_mask.shape[0]):
+        pseudo_mask_128[i, inds[i]] = final_mask[i, inds[i]].long()
+    
+    end_points['pseudo_mask'] = pseudo_mask_128.detach().cpu().numpy()
 
     return label_mask, center_label, sem_cls_label, heading_label, heading_residual_label, size_label, size_residual_label, false_center_label, iou_label
 

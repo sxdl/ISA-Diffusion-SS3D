@@ -18,6 +18,8 @@ import pc_util
 import sunrgbd_utils
 from model_util_sunrgbd import SunrgbdDatasetConfig
 
+from models.augment_helper import AugmentHelper
+
 DC = SunrgbdDatasetConfig() # dataset specific config
 MAX_NUM_OBJ = 64 # maximum number of objects allowed per scene
 MEAN_COLOR_RGB = np.array([0.5,0.5,0.5]) # sunrgbd color is in 0~1
@@ -46,6 +48,7 @@ class SunrgbdSSLLabeledDataset(Dataset):
         self.use_color = use_color
         self.use_height = use_height
         self.augment = augment
+        self.augment_helper = AugmentHelper(DC)
 
     def __len__(self):
         return len(self.scan_names)
@@ -82,6 +85,8 @@ class SunrgbdSSLLabeledDataset(Dataset):
             floor_height = np.percentile(point_cloud[:, 2], 0.99)
             height = point_cloud[:, 2] - floor_height
             point_cloud = np.concatenate([point_cloud, np.expand_dims(height, 1)], 1)  # (N,4) or (N,7)
+
+        self.augment_helper.add_to_labeled_instance_db_sunrgbd(idx, point_cloud, bboxes)
 
         ema_point_cloud = pc_util.random_sampling(point_cloud, self.num_points, return_choices=False)
 
